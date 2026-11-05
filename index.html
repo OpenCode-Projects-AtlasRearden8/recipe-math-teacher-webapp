@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recipe Math Teacher — gentle kitchen math</title>
+<style>
+  :root{
+    --bg:#faf7f2; --card:#ffffff; --ink:#2b2620; --soft:#6b6258;
+    --accent:#b4592e; --accent-soft:#f3e1d3; --line:#e6ddd2; --ok:#2e7d4f; --warn:#a8631c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Georgia,'Times New Roman',serif;color:var(--ink);background:var(--bg);line-height:1.55}
+  header{background:var(--accent);color:#fff;padding:1.2rem 1rem 1rem;text-align:center}
+  header h1{margin:0;font-size:1.6rem}
+  header p{margin:.35rem 0 0;font-size:.95rem;opacity:.92}
+  nav{background:var(--accent-soft);padding:.5rem;text-align:center;font-size:.9rem}
+  nav a{color:var(--accent);text-decoration:none;margin:0 .6rem;font-weight:bold}
+  nav a:hover{text-decoration:underline}
+  main{max-width:780px;margin:0 auto;padding:1rem}
+  section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.2rem;margin:1rem 0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  h2{margin:0 0 .25rem;font-size:1.25rem;color:var(--accent)}
+  .why{color:var(--soft);font-size:.95rem;margin:.2rem 0 .8rem}
+  .row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.4rem 0}
+  label{font-size:.9rem;color:var(--soft);min-width:6.5rem}
+  input,select{font:inherit;padding:.45rem .55rem;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);min-width:5.5rem}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  button{font:inherit;padding:.45rem .85rem;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:6px;cursor:pointer;margin:.15rem}
+  button.ghost{background:#fff;color:var(--accent)}
+  button:hover{filter:brightness(1.08)}
+  .big{font-size:1.5rem;color:var(--accent);margin:.5rem 0}
+  .steps{background:#fdf9f4;border:1px dashed var(--line);border-radius:8px;padding:.7rem .9rem;margin:.6rem 0;font-size:.95rem}
+  .steps ol{margin:.2rem 0 .2rem 1.1rem;padding:0}
+  .steps li{margin:.25rem 0}
+  .tiny{font-size:.85rem;color:var(--soft)}
+  .flags{margin:.5rem 0}
+  .flag{padding:.5rem .7rem;border-radius:6px;margin:.35rem 0;font-size:.95rem}
+  .flag.info{background:#eef5ef;border:1px solid #cfe3d4}
+  .flag.care{background:#fdf3e4;border:1px solid #ecd9b7}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:.5rem 0}
+  th,td{border-bottom:1px solid var(--line);padding:.35rem .4rem;text-align:left}
+  th{color:var(--soft);font-size:.85rem}
+  .notes textarea{width:100%;min-height:8rem;font:inherit;padding:.6rem;border:1px solid var(--line);border-radius:8px}
+  footer{text-align:center;color:var(--soft);font-size:.85rem;padding:1.5rem 1rem 2rem}
+  footer a{color:var(--accent)}
+  kbd{font-family:inherit;background:var(--accent-soft);padding:.05rem .3rem;border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Recipe Math Teacher</h1>
+  <p>Gentle, step-by-step kitchen math: halve, double, convert, cost out, and sanity-check any recipe.</p>
+</header>
+<nav>
+  <a href="#scale">Scale</a> · <a href="#units">Convert</a> · <a href="#pans">Pans</a> ·
+  <a href="#cost">Cost</a> · <a href="#check">Does it scale?</a> · <a href="#notes">Notes</a>
+</nav>
+<main>
+
+<section id="scale">
+  <h2>1 · Double it, halve it, or one-and-a-half it</h2>
+  <p class="why">Most recipes want to be multiplied — not feared. Pick an amount, choose what to do with it, and watch each step.</p>
+  <div class="row">
+    <label for="s-qty">Amount</label>
+    <input id="s-qty" type="number" step="any" min="0" value="2">
+    <select id="s-unit" aria-label="unit">
+      <option value="">(no unit — just a number)</option>
+      <optgroup label="Volume">
+        <option>tsp</option><option>tbsp</option><option>fl oz</option><option>cup</option>
+        <option>pint</option><option>quart</option><option>gallon</option>
+        <option>ml</option><option>liter</option>
+      </optgroup>
+      <optgroup label="Weight">
+        <option>oz</option><option>lb</option><option>g</option><option>kg</option>
+      </optgroup>
+    </select>
+  </div>
+  <div class="row">
+    <button data-mult="0.5">Halve (×½)</button>
+    <button data-mult="1.5">One-and-a-half (×1½)</button>
+    <button data-mult="2">Double (×2)</button>
+    <button data-mult="3">Triple (×3)</button>
+  </div>
+  <div class="row">
+    <label for="s-mult">Or any multiplier</label>
+    <input id="s-mult" type="number" step="any" value="1.5" min="0">
+    <button id="s-go" class="ghost">Scale it</button>
+  </div>
+  <div id="s-out" aria-live="polite"></div>
+</section>
+
+<section id="units">
+  <h2>2 · Unit conversions, worked out</h2>
+  <p class="why">Cups to tablespoons, quarts to liters — with every step written out so the math stops being magic.</p>
+  <div class="row">
+    <label for="u-qty">Amount</label>
+    <input id="u-qty" type="number" step="any" value="2">
+    <label for="u-from" class="tiny">from</label>
+    <select id="u-from"></select>
+    <label for="u-to" class="tiny">to</label>
+    <select id="u-to"></select>
+    <button id="u-go" class="ghost">Convert</button>
+  </div>
+  <div id="u-out" aria-live="polite"></div>
+</section>
+
+<section id="pans">
+  <h2>3 · Pan-size swaps</h2>
+  <p class="why">Swapping an 8×8 for a 9×13? Compare the areas, get the multiplier, and your bake time gets a gentle warning.</p>
+  <div class="row">
+    <label>From pan</label>
+    <select id="p1-shape" aria-label="from shape"><option value="round">round</option><option value="square">square / rectangular</option></select>
+    <input id="p1-a" type="number" step="any" value="8" min="0"> <span class="tiny">in</span>
+    <span class="tiny">×</span>
+    <input id="p1-b" type="number" step="any" value="8" min="0" disabled> <span class="tiny">in</span>
+  </div>
+  <div class="row">
+    <label>To pan</label>
+    <select id="p2-shape" aria-label="to shape"><option value="round">round</option><option value="square" selected>square / rectangular</option></select>
+    <input id="p2-a" type="number" step="any" value="13" min="0"> <span class="tiny">in</span>
+    <span class="tiny">×</span>
+    <input id="p2-b" type="number" step="any" value="9" min="0"> <span class="tiny">in</span>
+    <button id="p-go" class="ghost">Compare pans</button>
+  </div>
+  <div id="p-out" aria-live="polite"></div>
+</section>
+
+<section id="cost">
+  <h2>4 · What does one serving cost?</h2>
+  <p class="why">List what you spent on each ingredient, say how many servings it makes, and this does the division politely.</p>
+  <div class="row">
+    <label for="c-servings">Servings</label>
+    <input id="c-servings" type="number" step="any" min="1" value="6">
+    <button id="c-add" class="ghost">+ Add ingredient</button>
+  </div>
+  <table id="c-table">
+    <thead><tr><th>Ingredient</th><th>Cost you paid ($)</th><th></th></tr></thead>
+    <tbody id="c-body"></tbody>
+    <tfoot><tr><td><strong>Batch total</strong></td><td id="c-total">—</td><td></td></tr></tfoot>
+  </table>
+  <button id="c-calc">Cost per serving</button>
+  <div id="c-out" aria-live="polite"></div>
+  <p class="tiny">Enter what the ingredient actually cost you at the store (the whole bag, if you bought a whole bag). Good enough beats exact.</p>
+</section>
+
+<section id="check">
+  <h2>5 · &ldquo;Does this scale?&rdquo; sanity checker</h2>
+  <p class="why">Cooking doubles beautifully; baking gets opinionated. Enter your party plans and get a friendly reality check — plus pan advice.</p>
+  <div class="row">
+    <label for="k-from">Recipe serves</label>
+    <input id="k-from" type="number" min="1" value="4">
+    <label for="k-to">You need to serve</label>
+    <input id="k-to" type="number" min="1" value="16">
+  </div>
+  <div class="row">
+    <label>Optional: two pans</label>
+    <select id="k-p1s"><option value="round">round</option><option value="square">square/rect</option></select>
+    <input id="k-p1a" type="number" step="any" value="8" min="0">
+    <input id="k-p1b" type="number" step="any" value="8" min="0" disabled>
+    <span class="tiny">→</span>
+    <select id="k-p2s"><option value="round">round</option><option value="square" selected>square/rect</option></select>
+    <input id="k-p2a" type="number" step="any" value="13" min="0">
+    <input id="k-p2b" type="number" step="any" value="9" min="0">
+  </div>
+  <button id="k-go" class="ghost">Check it</button>
+  <div id="k-out" aria-live="polite"></div>
+</section>
+
+<section id="notes" class="notes">
+  <h2>6 · Kitchen notes</h2>
+  <p class="why">Jot down what worked (&ldquo;doubled fine!&rdquo;, &ldquo;needed 10 more minutes&rdquo;). Notes stay on this device in your browser's localStorage — nothing is uploaded anywhere.</p>
+  <textarea id="n-text" placeholder="e.g. Doubling the chili worked great; the cornbread took 35 min at ×2."></textarea>
+  <div class="row">
+    <button id="n-save">Save notes</button>
+    <button id="n-clear" class="ghost">Clear notes</button>
+    <span id="n-status" class="tiny" aria-live="polite"></span>
+  </div>
+</section>
+
+<p class="tiny" style="text-align:center">This is kitchen arithmetic only — no nutrition, diet, or medical advice of any kind.</p>
+
+</main>
+<footer>
+  Recipe Math Teacher · built with patience by <strong>Asdale Dynamics, LLC</strong> · MIT license · runs fully offline, notes saved only in your browser
+</footer>
+
+<script>
+/* MATH-CORE-BEGIN */
+'use strict';
+
+const VOLUME_UNITS = {
+  'tsp':    { ml: 4.92892,        label: 'teaspoons' },
+  'tbsp':   { ml: 14.7868,        label: 'tablespoons' },
+  'fl oz':  { ml: 29.5735,        label: 'fluid ounces' },
+  'cup':    { ml: 236.588,        label: 'cups' },
+  'pint':   { ml: 473.176,        label: 'pints' },
+  'quart':  { ml: 946.353,        label: 'quarts' },
+  'gallon': { ml: 3785.41,        label: 'gallons' },
+  'ml':     { ml: 1,              label: 'milliliters' },
+  'liter':  { ml: 1000,           label: 'liters' }
+};
+
+const WEIGHT_UNITS = {
+  'oz': { g: 28.3495,  label: 'ounces' },
+  'lb': { g: 453.592,  label: 'pounds' },
+  'g':  { g: 1,        label: 'grams' },
+  'kg': { g: 1000,     label: 'kilograms' }
+};
+
+const FRACTION_GLYPHS = [
+  [0.125, '⅛'], [0.25, '¼'], [0.375, '⅜'], [0.5, '½'],
+  [0.625, '⅝'], [0.75, '¾'], [0.875, '⅞']
+];
+
+function roundToEighth(x) {
+  return Math.round(x * 8) / 8;
+}
+
+function friendlyQty(x) {
+  if (!isFinite(x)) return '—';
+  const sign = x < 0 ? '−' : '';
+  x = Math.abs(x);
+  const whole = Math.floor(x);
+  const frac = x - whole;
+  let best = null, bestDiff = 0.03;
+  for (const [v, g] of FRACTION_GLYPHS) {
+    const d = Math.abs(frac - v);
+    if (d < bestDiff) { bestDiff = d; best = g; }
+  }
+  if (best !== null) {
+    return whole === 0 ? sign + best : sign + whole + best;
+  }
+  return sign + String(+x.toFixed(2));
+}
+
+function friendlyCost(x) {
+  if (!isFinite(x)) return '—';
+  return '$' + x.toFixed(2);
+}
+
+function unitInfo(unit) {
+  if (VOLUME_UNITS[unit]) return { kind: 'volume', ml: VOLUME_UNITS[unit].ml };
+  if (WEIGHT_UNITS[unit]) return { kind: 'weight', g: WEIGHT_UNITS[unit].g };
+  return null;
+}
+
+function convertQty(amount, from, to) {
+  const f = unitInfo(from), t = unitInfo(to);
+  if (!f || !t || f.kind !== t.kind) return null;
+  if (f.kind === 'volume') return amount * f.ml / t.ml;
+  return amount * f.g / t.g;
+}
+
+function mlText(v) {
+  return v >= 100 ? Math.round(v).toLocaleString('en-US') : (Math.round(v * 10) / 10).toString();
+}
+
+function conversionSteps(amount, from, to) {
+  const result = convertQty(amount, from, to);
+  if (result === null || !isFinite(result)) return null;
+  const f = VOLUME_UNITS[from] || WEIGHT_UNITS[from];
+  const t = VOLUME_UNITS[to] || WEIGHT_UNITS[to];
+  const baseKey = VOLUME_UNITS[from] ? 'ml' : 'g';
+  const basePerFrom = VOLUME_UNITS[from] ? VOLUME_UNITS[from].ml : WEIGHT_UNITS[from].g;
+  const basePerTo = VOLUME_UNITS[to] ? VOLUME_UNITS[to].ml : WEIGHT_UNITS[to].g;
+  const totalBase = amount * basePerFrom;
+  const steps = [];
+  steps.push('start with ' + friendlyQty(amount) + ' ' + (amount === 1 ? f.label.replace(/s$/, '') : f.label));
+  steps.push('the bridge: 1 ' + from + ' = ' + mlText(basePerFrom) + ' ' + baseKey);
+  steps.push('so ' + friendlyQty(amount) + ' ' + (amount === 1 ? f.label.replace(/s$/, '') : f.label) +
+    ' = ' + mlText(totalBase) + ' ' + baseKey);
+  if (basePerTo === 1) {
+    steps.push(from + ' and ' + to + ' measure the same thing, so: ' + friendlyQty(amount) + ' ' + from + ' = <strong>' +
+      friendlyQty(result) + ' ' + (Math.round(result) === 1 ? t.label.replace(/s$/, '') : t.label) + '</strong>');
+  } else {
+    steps.push(mlText(totalBase) + ' ' + baseKey + ' ÷ ' + mlText(basePerTo) + ' (' + baseKey + ' per 1 ' + to + ') = <strong>' +
+      friendlyQty(result) + ' ' + (Math.round(result) === 1 ? t.label.replace(/s$/, '') : t.label) + '</strong>');
+  }
+  return { result, steps };
+}
+
+function panAreaIn2(shape, a, b) {
+  if (shape === 'round') {
+    return Math.PI * Math.pow(a / 2, 2);
+  }
+  return a * (b == null ? a : b);
+}
+
+function panFactor(areaFrom, areaTo) {
+  if (!areaFrom || areaFrom <= 0) return null;
+  return areaTo / areaFrom;
+}
+
+function costCalc(items, servings) {
+  const cleaned = items
+    .map(it => ({ name: (it.name || '').trim() || 'ingredient', cost: Number(it.cost) }))
+    .filter(it => it.cost > 0);
+  const total = cleaned.reduce((sum, it) => sum + it.cost, 0);
+  const per = servings > 0 ? total / servings : null;
+  const steps = cleaned.map(it => it.name + ': ' + friendlyCost(it.cost));
+  steps.push('add them up for the whole batch: ' +
+    cleaned.map(it => friendlyCost(it.cost)).join(' + ') + ' = ' + friendlyCost(total));
+  if (per !== null) {
+    steps.push(friendlyCost(total) + ' ÷ ' + servings + ' servings = ' +
+      friendlyCost(per) + ' per serving');
+  }
+  return { total, per, steps };
+}
+
+function sanityCheck(originServings, targetServings) {
+  const flags = [];
+  if (!(originServings > 0) || !(targetServings > 0)) {
+    flags.push({ level: 'care', text: 'Servings need to be real numbers above zero for this to mean anything.' });
+    return { mult: null, flags };
+  }
+  const mult = targetServings / originServings;
+  const mTxt = friendlyQty(mult);
+  flags.push({
+    level: 'info',
+    text: 'Your multiplier is ×' + mTxt + ' (' + originServings + ' → ' + targetServings + ' servings).'
+  });
+  if (mult <= 0.25) {
+    flags.push({ level: 'care', text: 'That is a very small batch. Season with a light hand — tiny batches magnify measurements, and a pinch of mistake is a bigger pinch of the dish.' });
+  } else if (mult < 1) {
+    flags.push({ level: 'info', text: 'Making less? Halving works fine for soups and stews. Use a smaller pan so nothing cooks thin and fast by accident.' });
+  } else if (mult >= 1 && mult <= 1.5) {
+    flags.push({ level: 'info', text: 'Small stretch — this usually works exactly as written. Cooking time should barely change.' });
+  } else if (mult <= 2) {
+    flags.push({ level: 'info', text: 'Doubling soups, stews, and sauces usually just works. Brow may take a couple extra minutes (more food, same pan heat).' });
+  } else if (mult <= 4) {
+    flags.push({ level: 'care', text: 'Big jump. Salt and spices should NOT be multiplied fully — go about 1½× of the original first, taste, then nudge up. Baking powder, soda, and yeast: multiply fully only up to ×2, then keep recipe-wise per pan.' });
+  } else {
+    flags.push({ level: 'care', text: '×' + mTxt + ' is a marathon. Consider making the original recipe several separate times instead — one giant bowl of batter or dough rarely behaves the way you hope.' });
+  }
+  if (mult >= 1 && mult <= 4) {
+    flags.push({ level: 'info', text: 'Stovetop dishes (soups, sauces) keep roughly the same cooking time; baking time may need a little longer if the pan is fuller or deeper — check a few minutes early anyway.' });
+  }
+  flags.push({ level: 'info', text: 'Kitchen math only — this is arithmetic comfort, not nutrition or medical guidance.' });
+  return { mult, flags };
+}
+
+function fullSanityCheck(originServings, targetServings, pan1, pan2) {
+  const base = sanityCheck(originServings, targetServings);
+  if (base.mult !== null && pan1 && pan2) {
+    const a1 = panAreaIn2(pan1.shape, pan1.a, pan1.b);
+    const a2 = panAreaIn2(pan2.shape, pan2.a, pan2.b);
+    const pf = panFactor(a1, a2);
+    base.pan = { a1, a2, factor: pf };
+    if (pf) {
+      base.flags.push({
+        level: 'info',
+        text: 'Your pans hold a ratio of ×' + friendlyQty(pf) +
+          ' in area (' + Math.round(a1) + ' in² → ' + Math.round(a2) + ' in²).'
+      });
+      if (Math.abs(pf - base.mult) / base.mult > 0.25) {
+        base.flags.push({
+          level: 'care',
+          text: 'Heads up: you are scaling the recipe ×' + friendlyQty(base.mult) +
+            ' but the new pan only holds about ×' + friendlyQty(pf) + ' the batter. Split extra batter into a second (smaller) pan rather than over-filling yours.'
+        });
+      } else {
+        base.flags.push({ level: 'info', text: 'Pan and recipe scale line up nicely — fill the pan about the same depth as before.' });
+      }
+    }
+  }
+  return base;
+}
+/* MATH-CORE-END */
+
+const $ = id => document.getElementById(id);
+
+function showResult(el, headline, stepsArr, note) {
+  let html = '<div class="big">' + headline + '</div>';
+  if (stepsArr && stepsArr.length) {
+    html += '<div class="steps"><ol>' + stepsArr.map(s => '<li>' + s + '</li>').join('') + '</ol></div>';
+  }
+  if (note) html += '<p class="tiny">' + note + '</p>';
+  el.innerHTML = html;
+}
+
+(function initScaleTool() {
+  function run(mult) {
+    const qty = Number($('s-qty').value);
+    const unit = $('s-unit').value;
+    const m = mult != null ? mult : Number($('s-mult').value);
+    if (!(qty >= 0) || !(m > 0)) {
+      $('s-out').innerHTML = '<p class="tiny">Give me an amount and a positive multiplier and we\'ll go from there.</p>';
+      return;
+    }
+    const result = qty * m;
+    const qTxt = friendlyQty(qty) + (unit ? ' ' + unit : '');
+    const rTxt = friendlyQty(result) + (unit ? ' ' + unit : '');
+    const steps = [
+      'start with ' + qTxt,
+      'multiply: ' + friendlyQty(qty) + ' × ' + m + ' = ' + (Math.round(result * 1000) / 1000),
+      'round to a friendly kitchen amount: ' + rTxt
+    ];
+    if (unit && (unit === 'tsp' || unit === 'tbsp' || unit === 'fl oz')) {
+      const asCups = convertQty(result, unit, 'cup');
+      steps.push('tip: that is also ' + friendlyQty(asCups) + ' cup — bigger units are easier to measure');
+    }
+    showResult($('s-out'), qTxt + '  →  ×' + m + '  →  <strong>' + rTxt + '</strong>', steps);
+  }
+  document.querySelectorAll('#scale button[data-mult]').forEach(btn => {
+    btn.addEventListener('click', () => run(Number(btn.dataset.mult)));
+  });
+  $('s-go').addEventListener('click', () => run(null));
+})();
+
+(function initUnits() {
+  const units = Object.keys(VOLUME_UNITS).concat(Object.keys(WEIGHT_UNITS));
+  const sel1 = $('u-from'), sel2 = $('u-to');
+  units.forEach(u => {
+    sel1.add(new Option(u, u));
+    sel2.add(new Option(u, u));
+  });
+  sel1.value = 'cup'; sel2.value = 'tbsp';
+  $('u-go').addEventListener('click', () => {
+    const qty = Number($('u-qty').value);
+    const out = conversionSteps(qty, sel1.value, sel2.value);
+    if (!out || out.result === null) {
+      $('u-out').innerHTML = '<p class="tiny">Pick two units of the same kind (volume→volume or weight→weight). Volume and weight are different worlds — 1 cup of feathers is not 1 cup of flour.</p>';
+      return;
+    }
+    showResult($('u-out'), friendlyQty(qty) + ' ' + sel1.value + ' = <strong>' + friendlyQty(out.result) + ' ' + sel2.value + '</strong>', out.steps);
+  });
+})();
+
+(function initPans() {
+  [['p1-shape','p1-a','p1-b'],['p2-shape','p2-a','p2-b'],['k-p1s','k-p1a','k-p1b'],['k-p2s','k-p2a','k-p2b']].forEach(([shape,a,b]) => {
+    const sh = $(shape), ia = $(a), ib = $(b);
+    function sync() { ib.disabled = sh.value === 'round'; }
+    sh.addEventListener('change', sync); sync();
+  });
+  function readPan(shape, a, b) {
+    return { shape: $(shape).value, a: Number($(a).value), b: Number($(b).value) };
+  }
+  function compare(ids) {
+    const [s1,a1,b1,s2,a2,b2,out] = ids;
+    const p1 = readPan(s1,a1,b1), p2 = readPan(s2,a2,b2);
+    if (!(p1.a > 0) || !(p2.a > 0)) {
+      $(out).innerHTML = '<p class="tiny">Pan sizes need to be numbers bigger than zero.</p>';
+      return;
+    }
+    const area1 = panAreaIn2(p1.shape, p1.a, p1.b);
+    const area2 = panAreaIn2(p2.shape, p2.a, p2.b);
+    const f = panFactor(area1, area2);
+    const steps = [];
+    const name1 = p1.shape === 'round' ? p1.a + '&Prime; round' : p1.a + '&Prime; × ' + (p1.b || p1.a) + '&Prime;';
+    const name2 = p2.shape === 'round' ? p2.a + '&Prime; round' : p2.a + '&Prime; × ' + (p2.b || p2.a) + '&Prime;';
+    if (p1.shape === 'round') steps.push('round pan area: π × (' + p1.a + ' ÷ 2)² ≈ ' + Math.round(area1) + ' in²');
+    else steps.push('rectangle area: ' + p1.a + ' × ' + (p1.b || p1.a) + ' = ' + Math.round(area1) + ' in²');
+    if (p2.shape === 'round') steps.push('round pan area: π × (' + p2.a + ' ÷ 2)² ≈ ' + Math.round(area2) + ' in²');
+    else steps.push('rectangle area: ' + p2.a + ' × ' + (p2.b || p2.a) + ' = ' + Math.round(area2) + ' in²');
+    steps.push('batter scale: ' + Math.round(area2) + ' ÷ ' + Math.round(area1) + ' ≈ ×' + friendlyQty(f) + ' the recipe');
+    let warn = '';
+    if (f && f > 1.6) warn = 'Much bigger pan — the same recipe spreads thinner here, so start checking for doneness a few minutes early.';
+    if (f && f < 0.62) warn = 'Smaller pan — the batter will be deeper, so expect a few extra bake minutes and check the middle.';
+    showResult($(out), name1 + ' → ' + name2 + '  ·  use ×<strong>' + friendlyQty(f) + '</strong> the recipe', steps, warn || 'Fill depth stays about the same as the original recipe.');
+  }
+  $('p-go').addEventListener('click', () => compare(['p1-shape','p1-a','p1-b','p2-shape','p2-a','p2-b','p-out']));
+})();
+
+(function initCost() {
+  const body = $('c-body');
+  function addRow(name, cost) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><input class="c-name" type="text" placeholder="e.g. flour" value="' +
+      (name || '') + '"></td>' +
+      '<td><input class="c-cost" type="number" step="any" min="0" value="' + (cost != null ? cost : '') + '"></td>' +
+      '<td><button class="ghost c-del" aria-label="remove row">✕</button></td>';
+    body.appendChild(tr);
+    tr.querySelector('.c-del').addEventListener('click', () => { tr.remove(); updateTotal(); });
+    tr.querySelector('.c-cost').addEventListener('input', updateTotal);
+    tr.querySelector('.c-name').addEventListener('input', () => {});
+  }
+  function readItems() {
+    return Array.from(body.querySelectorAll('tr')).map(tr => ({
+      name: tr.querySelector('.c-name').value,
+      cost: tr.querySelector('.c-cost').value
+    }));
+  }
+  function updateTotal() {
+    const items = readItems();
+    const total = items.reduce((s, it) => s + (Number(it.cost) > 0 ? Number(it.cost) : 0), 0);
+    $('c-total').textContent = total > 0 ? friendlyCost(total) : '—';
+    return total;
+  }
+  $('c-add').addEventListener('click', () => addRow());
+  $('c-calc').addEventListener('click', () => {
+    const servings = Number($('c-servings').value);
+    if (!(servings > 0)) {
+      $('c-out').innerHTML = '<p class="tiny">How many servings? That number divides everything, so it matters.</p>';
+      return;
+    }
+    const items = readItems();
+    const anyCost = items.some(it => Number(it.cost) > 0);
+    if (!anyCost) {
+      $('c-out').innerHTML = '<p class="tiny">Add at least one cost above (rough is fine!).</p>';
+      return;
+    }
+    const out = costCalc(items, servings);
+    showResult($('c-out'),
+      '<strong>' + friendlyCost(out.per) + '</strong> per serving (' + servings + ' servings)',
+      out.steps, 'Prices are what you paid — no taxes, tips, or nutrition math. This is a budgeting estimate, not a bill.');
+  });
+  addRow('flour', 0.6); addRow('butter', 1.2); addRow('sugar', 0.4);
+  updateTotal();
+})();
+
+(function initCheck() {
+  $('k-go').addEventListener('click', () => {
+    const from = Number($('k-from').value), to = Number($('k-to').value);
+    const p1 = { shape: $('k-p1s').value, a: Number($('k-p1a').value), b: Number($('k-p1b').value) };
+    const p2 = { shape: $('k-p2s').value, a: Number($('k-p2a').value), b: Number($('k-p2b').value) };
+    const usePans = p1.a > 0 && p2.a > 0;
+    const out = fullSanityCheck(from, to, usePans ? p1 : null, usePans ? p2 : null);
+    let html = '<div class="flags">';
+    out.flags.forEach(f => { html += '<div class="flag ' + f.level + '">' + f.text + '</div>'; });
+    html += '</div>';
+    $('k-out').innerHTML = html;
+  });
+})();
+
+(function initNotes() {
+  const KEY = 'recipe-math-teacher-notes';
+  const ta = $('n-text'), status = $('n-status');
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved !== null) ta.value = saved;
+  } catch (e) { /* private mode etc. — notes just won't persist */ }
+  $('n-save').addEventListener('click', () => {
+    try {
+      localStorage.setItem(KEY, ta.value);
+      status.textContent = 'Saved on this device ✓';
+    } catch (e) {
+      status.textContent = 'Could not save (browser storage unavailable) — notes stay in this tab for now.';
+    }
+    setTimeout(() => { status.textContent = ''; }, 2500);
+  });
+  $('n-clear').addEventListener('click', () => {
+    ta.value = '';
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    status.textContent = 'Cleared.';
+    setTimeout(() => { status.textContent = ''; }, 2500);
+  });
+})();
+</script>
+</body>
+</html>
